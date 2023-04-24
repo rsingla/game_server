@@ -1,4 +1,4 @@
-package main
+package socket
 
 import (
 	"log"
@@ -49,8 +49,4 @@ func GameServer() {
 		}
 	}
 
-}
-
-func main() {
-	GameServer()
 }
