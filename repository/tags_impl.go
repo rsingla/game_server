@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/rsingla/game_server/model"
 	"gorm.io/gorm"
 )
@@ -17,7 +19,13 @@ func (t *TagsImpl) FindAll() ([]*model.Tags, error) {
 
 func (t *TagsImpl) FindById(id int) (*model.Tags, error) {
 	var tags model.Tags
+
 	err := t.Db.First(&tags, id).Error
+
+	if err != nil {
+		return &tags, errors.New("tag not found")
+	}
+
 	return &tags, err
 }
 

@@ -8,7 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func ConnectDB() {
+func ConnectDB() *gorm.DB {
+
+	LoadEnv()
 
 	//This is not a valid string, just an example
 	dsn := os.Getenv("DB_CONNECTION")
@@ -20,5 +22,7 @@ func ConnectDB() {
 
 	// Migrate the schema
 	db.AutoMigrate(&model.Tags{})
+
+	return db
 
 }

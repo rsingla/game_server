@@ -4,18 +4,20 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rsingla/game_server/helper"
+	"github.com/rsingla/game_server/service"
 )
 
 func main() {
 
+	helper.ConnectDB()
+
 	server := gin.Default()
 	server.SetTrustedProxies([]string{"192.168.1.1", "localhost", "127.0.0.1"})
 
-	server.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, "pong")
-	})
-
 	server.GET("/", welcome)
+
+	server.POST("/tags", service.Save)
 
 	server.Run(":8000")
 }
