@@ -1,10 +1,12 @@
 package repository
 
+import "github.com/rsingla/game_server/model"
+
 type TagsRepository interface {
-	FindAll() ([]*Tags, error)
-	FindById(id int) (*Tags, error)
-	FindBySlug(slug string) (*Tags, error)
-	Store(tags *Tags) (*Tags, error)
-	Update(tags *Tags) (*Tags, error)
-	Delete(tags *Tags) error
+	FindAll() ([]*model.Tags, error)
+	FindById(id int) (*model.Tags, error)
+	FindBySlug(slug string) (*model.Tags, error)
+	Store(tags *model.Tags) (*model.Tags, error)
+	Update(tags *model.Tags) (*model.Tags, error)
+	Delete(tags *model.Tags) error
 }
