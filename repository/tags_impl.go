@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"log"
 
 	"github.com/rsingla/game_server/model"
 	"gorm.io/gorm"
@@ -18,7 +19,7 @@ func (t *TagsImpl) FindAll() ([]*model.Tags, error) {
 }
 
 func (t *TagsImpl) FindById(id int) (*model.Tags, error) {
-	var tags model.Tags
+	tags := model.Tags{}
 
 	err := t.Db.First(&tags, id).Error
 
@@ -45,7 +46,19 @@ func (t *TagsImpl) Update(tags *model.Tags) (*model.Tags, error) {
 	return tags, err
 }
 
-func (t *TagsImpl) Delete(tags *model.Tags) error {
-	err := t.Db.Delete(tags).Error
+func (t *TagsImpl) DeleteTags(id int) error {
+	log.Println("Delete : ", id)
+	var tags model.Tags
+
+	err := t.Db.First(&tags, id).Error
+
+	if err != nil {
+		return errors.New("tag not found")
+	}
+
+	log.Println(tags)
+
+	err = t.Db.Delete(tags).Error
+
 	return err
 }
