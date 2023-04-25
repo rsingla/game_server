@@ -1,13 +1,19 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rsingla/game_server/request"
+
+	"github.com/go-playground/validator/v10"
+
+	"github.com/rsingla/game_server/controller"
+	"github.com/rsingla/game_server/helper"
+	"github.com/rsingla/game_server/repository"
 	"github.com/rsingla/game_server/service"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -15,53 +21,36 @@ func main() {
 	server := gin.Default()
 	server.SetTrustedProxies([]string{"192.168.1.1", "localhost", "127.0.0.1"})
 
+	db := helper.ConnectDB()
+	validate := validator.New()
+
+	tagsRepository := repository.TagsRepoImpl(db)
+
+	tagsService := service.NewTagsService(tagsRepository, validate)
+
+	tagsController := controller.NewTagsController(*tagsService)
+
 	server.GET("/", welcome)
 
-	server.POST("/tags", Save)
-	server.DELETE("/tags/:id", DeleteById)
+	router := NewRouter(tagsController)
 
-	server.Run(":8000")
+	router.Run(":8000")
 }
 
-func Save(c *gin.Context) {
-	var tags request.TagsReq
+func NewRouter(tagsController *controller.TagsController) *gin.Engine {
+	router := gin.Default()
+	// add swagger
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	if err := c.ShouldBindJSON(&tags); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	tagsService := service.TagsService{}
-	tagModel, err := tagsService.Save(&tags)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, tagModel)
-}
+	baseRouter := router.Group("/api")
+	tagsRouter := baseRouter.Group("/tags")
+	//tagsRouter.GET("", tagsController.FindAll)
+	//tagsRouter.GET("/:tagId", tagsController.FindById)
+	tagsRouter.POST("", tagsController.Save)
+	//tagsRouter.PATCH("/:tagId", tagsController.Update)
+	tagsRouter.DELETE("/:id", tagsController.DeleteById)
 
-func DeleteById(c *gin.Context) {
-
-	id := c.Param("id")
-
-	log.Println("id", id)
-
-	if id == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Id is required"})
-		return
-	}
-
-	i, err := strconv.Atoi(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	log.Println("id Value : ", i)
-
-	tagsRepository := service.TagsService{}
-	tagsSvc := service.TagsService{TagsRepository: tagsRepository.TagsRepository}
-
-	tagsSvc.Delete(i)
-	c.JSON(http.StatusOK, gin.H{"data": "Tag deleted successfully"})
+	return router
 }
 
 func welcome(c *gin.Context) {

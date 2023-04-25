@@ -12,6 +12,10 @@ type TagsImpl struct {
 	Db *gorm.DB
 }
 
+func TagsRepoImpl(Db *gorm.DB) TagsRepository {
+	return &TagsImpl{Db: Db}
+}
+
 func (t *TagsImpl) FindAll() ([]*model.Tags, error) {
 	var tags []*model.Tags
 	err := t.Db.Find(&tags).Error

@@ -1,8 +1,10 @@
 package service
 
 import (
-	"github.com/go-playground/validator"
-	"github.com/rsingla/game_server/helper"
+	"log"
+
+	"github.com/go-playground/validator/v10"
+
 	"github.com/rsingla/game_server/model"
 	"github.com/rsingla/game_server/repository"
 	"github.com/rsingla/game_server/request"
@@ -10,24 +12,26 @@ import (
 
 type TagsService struct {
 	TagsRepository repository.TagsRepository
-	validate       *validator.Validate
+	Validate       *validator.Validate
 }
 
-func (t *TagsService) Save(tagsReq *request.TagsReq) (*model.Tags, error) {
+func NewTagsService(tagsRepository repository.TagsRepository, validate *validator.Validate) *TagsService {
+	return &TagsService{TagsRepository: tagsRepository, Validate: validate}
+}
 
-	//err := t.validate.Struct(&tagsReq)
-	//if err != nil {
-	//	log.Println(err)
-	//	log.Println(err.Error())
-	//	return nil, err
-	//}
+func (t *TagsService) Save(tagsReq request.TagsReq) (*model.Tags, error) {
 
-	tagsImpl := repository.TagsImpl{Db: helper.ConnectDB()}
+	err := t.Validate.Struct(tagsReq)
+	if err != nil {
+		log.Println(err)
+		log.Println(err.Error())
+		return nil, err
+	}
 
 	//Convert tags to model.Tags
 	tagsModel := model.Tags{Name: tagsReq.Name, Slug: tagsReq.Slug, Description: tagsReq.Description, Status: tagsReq.Status, Type: tagsReq.Type, Category: tagsReq.Category}
 
-	modelTags, err := tagsImpl.Save(&tagsModel)
+	modelTags, err := t.TagsRepository.Save(&tagsModel)
 
 	if err != nil {
 		return nil, err
@@ -38,7 +42,7 @@ func (t *TagsService) Save(tagsReq *request.TagsReq) (*model.Tags, error) {
 }
 
 func (t *TagsService) FindAll() ([]*model.Tags, error) {
-	err := t.validate.Struct(t)
+	err := t.Validate.Struct(t)
 	if err != nil {
 		return nil, err
 	}
@@ -48,15 +52,12 @@ func (t *TagsService) FindAll() ([]*model.Tags, error) {
 }
 
 func (t *TagsService) FindById(id int) (*model.Tags, error) {
-	err := t.validate.Struct(t)
-	if err != nil {
-		return nil, err
-	}
+
 	return t.TagsRepository.FindById(id)
 }
 
 func (t *TagsService) FindBySlug(slug string) (*model.Tags, error) {
-	err := t.validate.Struct(t)
+	err := t.Validate.Struct(t)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func (t *TagsService) FindBySlug(slug string) (*model.Tags, error) {
 }
 
 func (t *TagsService) Update(tagsReq *request.TagsReq) (*model.Tags, error) {
-	err := t.validate.Struct(t)
+	err := t.Validate.Struct(t)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +77,7 @@ func (t *TagsService) Update(tagsReq *request.TagsReq) (*model.Tags, error) {
 
 func (t *TagsService) Delete(id int) error {
 
-	tagsImpl := repository.TagsImpl{Db: helper.ConnectDB()}
-
-	err := tagsImpl.DeleteTags(id)
+	err := t.TagsRepository.DeleteTags(id)
 
 	if err != nil {
 		return err
